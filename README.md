@@ -20,6 +20,8 @@ Query and summarize your documents or just chat with local private GPT LLMs usin
   - **Easy Windows Installer** for Windows 10 64-bit
 - **Inference Servers** support (HF TGI server, vLLM, Gradio, ExLLaMa, Replicate, OpenAI, Azure OpenAI)
 - **OpenAI-compliant Python client API** for client-server control
+- **Web-Search** integration with Chat and Document Q/A
+- **Agents** for Search, Document Q/A, Python Code, CSV frames (Experimental, best with OpenAI currently)
 - **Evaluate** performance using reward models
 - **Quality** maintained with over 1000 unit and integration tests taking over 4 GPU-hours
 
@@ -38,12 +40,12 @@ cd h2ogpt
 pip install -r requirements.txt
 pip install -r reqs_optional/requirements_optional_langchain.txt
 pip install -r reqs_optional/requirements_optional_gpt4all.txt
-# if don't have wget, copy the below link to browser and download and place file into h2ogpt folder
-wget https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q8_0.bin
-python generate.py --base_model='llama' --prompt_type=llama2
+python generate.py --base_model='llama' --prompt_type=llama2 --model_path_llama=https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q8_0.bin --max_seq_len=4096
 ```
-then go to your browser by visiting [http://127.0.0.1:7860](http://127.0.0.1:7860) or [http://localhost:7860](http://localhost:7860).
+then go to your browser by visiting [http://127.0.0.1:7860](http://127.0.0.1:7860) or [http://localhost:7860](http://localhost:7860).  Choose 13B for better model than 7B.
 If encounter issues with llama-cpp-python or other packages that try to compile and fail, try binary wheels for your platform as linked in the detailed instructions below.
+
+We recommend quantized (e.g. GGML) models for most small-GPU systems, e.g. [LLaMa-2-7B-Chat-GGML](https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML) or 9GB+ GPU memory or larger models for [LLaMa-2-13B-Chat-GGML](https://huggingface.co/TheBloke/Llama-2-13B-Chat-GGML) if have 16GB+ GPU memory.
 
 ---
 
@@ -150,14 +152,19 @@ YouTube 4K version: https://www.youtube.com/watch?v=_iktbj4obAI
 * [Why H2O.ai?](#why-h2oai)
 * [Disclaimer](#disclaimer)
 
+### Experimental features
+
+These are not part of normal installation instructions and are experimental.
+
+* [SerpAPI web search augmentation](docs/README_SerpAPI.md) -- in Beta testing. Working well but hits file closed failure under intense use.
+* [Agents](docs/README_Agents.md) -- in Alpha testing.  Optimal for OpenAI, but that also fails sometimes.
+
 ### Roadmap
 
 - Integration of code and resulting LLMs with downstream applications and low/no-code platforms
-- Complement h2oGPT chatbot with search and other APIs
-- High-performance distributed training of larger models on trillion tokens
+- Complement h2oGPT chatbot with other APIs like ToolBench
 - Enhance the model's code completion, reasoning, and mathematical capabilities, ensure factual correctness, minimize hallucinations, and avoid repetitive output
-- Add other tools like search
-- Add agents for SQL and CSV question/answer
+- Add better agents for SQL and CSV question/answer
 
 ### Development
 

@@ -58,8 +58,6 @@ These instructions are for Ubuntu x86_64 (other linux would be similar with diff
   
 * Install dependencies:
     ```bash
-    git clone https://github.com/h2oai/h2ogpt.git
-    cd h2ogpt
     # fix any bad env
     pip uninstall -y pandoc pypandoc pypandoc-binary
     # broad support, but no training-time or data creation dependencies
@@ -73,7 +71,7 @@ These instructions are for Ubuntu x86_64 (other linux would be similar with diff
 * Install document question-answer dependencies:
     ```bash
     # May be required for jq package:
-    sudo apt-get install autoconf libtool
+    sudo apt-get -y install autoconf libtool
     # Required for Doc Q/A: LangChain:
     pip install -r reqs_optional/requirements_optional_langchain.txt
     # Required for CPU: LLaMa/GPT4All:
@@ -85,7 +83,7 @@ These instructions are for Ubuntu x86_64 (other linux would be similar with diff
     # Optional: support docx, pptx, ArXiv, etc. required by some python packages
     sudo apt-get install -y libmagic-dev poppler-utils tesseract-ocr libtesseract-dev libreoffice
     # Improved OCR with DocTR:
-    conda install -c conda-forge pygobject
+    conda install -y -c conda-forge pygobject
     pip install -r reqs_optional/requirements_optional_doctr.txt
     # go back to older onnx so Tesseract OCR still works
     pip install onnxruntime==1.15.0 onnxruntime-gpu==1.15.0
@@ -94,7 +92,6 @@ These instructions are for Ubuntu x86_64 (other linux would be similar with diff
     # Optional but required for PlayWright
     playwright install --with-deps
 * GPU Optional: For AutoGPTQ support on x86_64 linux
-    Try H2O.ai's pre-built wheel:
     ```bash
     pip uninstall -y auto-gptq ; pip install https://github.com/PanQiWei/AutoGPTQ/releases/download/v0.4.2/auto_gptq-0.4.2+cu118-cp310-cp310-linux_x86_64.whl
     # in-transformers support of AutoGPTQ
@@ -129,7 +126,7 @@ These instructions are for Ubuntu x86_64 (other linux would be similar with diff
     export FORCE_CMAKE=1
     CMAKE_ARGS="-DLLAMA_CUBLAS=on" FORCE_CMAKE=1 pip install llama-cpp-python==0.1.73 --no-cache-dir --verbose
    ```
-  * By default, we set `n_gpu_layers` to large value, so llama.cpp offloads all layers for maximum GPU performance.  You can control this by passing `--llamacpp_dict="{n_gpu_layers=20}"` for value 20, or setting in UI.  For highest performance, offload *all* layers.
+  * By default, we set `n_gpu_layers` to large value, so llama.cpp offloads all layers for maximum GPU performance.  You can control this by passing `--llamacpp_dict="{'n_gpu_layers':20}"` for value 20, or setting in UI.  For highest performance, offload *all* layers.
     That is, one gets maximum performance if one sees in startup of h2oGPT all layers offloaded:
       ```text
     llama_model_load_internal: offloaded 35/35 layers to GPU
@@ -181,8 +178,7 @@ These instructions are for Ubuntu x86_64 (other linux would be similar with diff
   ```
   UI using LLaMa.cpp LLaMa2 model:
   ```bash
-  wget https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q8_0.bin
-  python generate.py --base_model='llama' --prompt_type=llama2 --score_model=None --langchain_mode='UserData' --user_path=user_path
+  python generate.py --base_model='llama' --prompt_type=llama2 --score_model=None --langchain_mode='UserData' --user_path=user_path --model_path_llama=https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q8_0.bin --max_seq_len=4096
   ```
   which works on CPU or GPU (assuming llama cpp python package compiled against CUDA or Metal).
 

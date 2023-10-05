@@ -20,12 +20,12 @@ def glob_to_db(user_path, chunk=True, chunk_size=512, verbose=False,
                use_selenium=False,
 
                # pdfs
-               use_pymupdf=True,
-               use_unstructured_pdf=False,
-               use_pypdf=False,
+               use_pymupdf='auto',
+               use_unstructured_pdf='auto',
+               use_pypdf='auto',
                enable_pdf_ocr='auto',
-               try_pdf_as_html=True,
-               enable_pdf_doctr=False,
+               try_pdf_as_html='auto',
+               enable_pdf_doctr='auto',
 
                # images
                enable_ocr=False,
@@ -34,6 +34,7 @@ def glob_to_db(user_path, chunk=True, chunk_size=512, verbose=False,
                enable_captions=True,
                captions_model=None,
                caption_loader=None,
+               doctr_loader=None,
 
                # json
                jq_schema='.[]',
@@ -66,6 +67,7 @@ def glob_to_db(user_path, chunk=True, chunk_size=512, verbose=False,
                             enable_captions=enable_captions,
                             captions_model=captions_model,
                             caption_loader=caption_loader,
+                            doctr_loader=doctr_loader,
 
                             # json
                             jq_schema=jq_schema,
@@ -102,12 +104,12 @@ def make_db_main(use_openai_embedding: bool = False,
                  use_selenium=False,
 
                  # pdfs
-                 use_pymupdf=True,
-                 use_unstructured_pdf=False,
-                 use_pypdf=False,
+                 use_pymupdf='auto',
+                 use_unstructured_pdf='auto',
+                 use_pypdf='auto',
                  enable_pdf_ocr='auto',
-                 try_pdf_as_html=True,
-                 enable_pdf_doctr=False,
+                 enable_pdf_doctr='auto',
+                 try_pdf_as_html='auto',
 
                  # images
                  enable_ocr=False,
@@ -118,7 +120,7 @@ def make_db_main(use_openai_embedding: bool = False,
                  pre_load_caption_model: bool = False,
                  caption_gpu: bool = True,
                  # caption_loader=None,  # set internally
-                 # doctr_loader=None,  #  unused
+                 # doctr_loader=None,  # set internally
 
                  # json
                  jq_schema='.[]',
@@ -187,7 +189,10 @@ def make_db_main(use_openai_embedding: bool = False,
     :param pre_load_caption_model: See generate.py
     :param caption_gpu: Caption images on GPU if present
 
-    :param db_type: Type of db to create. Currently only 'chroma' and 'weaviate' is supported.
+    :param db_type: 'faiss' for in-memory
+                    'chroma' (for chroma >= 0.4)
+                    'chroma_old' (for chroma < 0.4) -- recommended for large collections
+                    'weaviate' for persisted on disk
     :param selected_file_types: File types (by extension) to include if passing user_path
        For a list of possible values, see:
        https://github.com/h2oai/h2ogpt/blob/main/docs/README_LangChain.md#shoosing-document-types
@@ -261,9 +266,13 @@ def make_db_main(use_openai_embedding: bool = False,
                                                ).load_model()
     else:
         if enable_captions:
-            caption_loader = 'gpu' if caption_gpu else 'cpu'
+            caption_loader = 'gpu' if n_gpus > 0 and caption_gpu else 'cpu'
         else:
             caption_loader = False
+    if enable_doctr or enable_pdf_ocr in [True, 'auto', 'on']:
+        doctr_loader = 'gpu' if n_gpus > 0 and caption_gpu else 'cpu'
+    else:
+        doctr_loader = False
 
     if verbose:
         print("Getting sources", flush=True)
@@ -293,6 +302,7 @@ def make_db_main(use_openai_embedding: bool = False,
                          enable_captions=enable_captions,
                          captions_model=captions_model,
                          caption_loader=caption_loader,
+                         doctr_loader=doctr_loader,
                          # Note: we don't reload doctr model
 
                          # json

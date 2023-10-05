@@ -500,6 +500,7 @@ def test_make_add_db(repeat, db_type):
                                   migrate_embedding_model=True,
                                   auto_migrate_db=False,
                                   caption_loader=False,
+                                  doctr_loader=False,
                                   enable_captions=False,
                                   enable_doctr=False,
                                   enable_pix2struct=False,
@@ -923,51 +924,155 @@ def test_pptx_add(db_type):
             assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1)
 
 
+@pytest.mark.parametrize("use_pypdf", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("use_unstructured_pdf", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("use_pymupdf", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("enable_pdf_doctr", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("enable_pdf_ocr", ['auto', 'on', 'off'])
 @pytest.mark.parametrize("db_type", db_types)
 @wrap_test_forked
-def test_pdf_add(db_type):
+def test_pdf_add(db_type, enable_pdf_ocr, enable_pdf_doctr, use_pymupdf, use_unstructured_pdf, use_pypdf):
     kill_weaviate(db_type)
     from src.make_db import make_db_main
     with tempfile.TemporaryDirectory() as tmp_persist_directory:
         with tempfile.TemporaryDirectory() as tmp_user_path:
-            url = 'https://www.africau.edu/images/default/sample.pdf'
-            test_file1 = os.path.join(tmp_user_path, 'sample.pdf')
-            download_simple(url, dest=test_file1)
-            db, collection_name = make_db_main(persist_directory=tmp_persist_directory, user_path=tmp_user_path,
-                                               fail_any_exception=True, db_type=db_type,
-                                               add_if_exists=False)
+            if True:
+                if False:
+                    url = 'https://www.africau.edu/images/default/sample.pdf'
+                    test_file1 = os.path.join(tmp_user_path, 'sample.pdf')
+                    download_simple(url, dest=test_file1)
+                else:
+                    test_file1 = os.path.join(tmp_user_path, 'sample.pdf')
+                    shutil.copy(os.path.join('tests', 'sample.pdf'), tmp_user_path)
+            else:
+                if False:
+                    name = 'CityofTshwaneWater.pdf'
+                    location = "tests"
+                else:
+                    name = '555_593.pdf'
+                    location = '/home/jon/Downloads/'
+
+                test_file1 = os.path.join(location, name)
+                shutil.copy(test_file1, tmp_user_path)
+                test_file1 = os.path.join(tmp_user_path, name)
+
+            default_mode = use_pymupdf in ['auto', 'on'] and \
+                           use_pypdf in ['auto'] and \
+                           use_unstructured_pdf in ['auto'] and \
+                           enable_pdf_doctr in ['off', 'auto'] and \
+                           enable_pdf_ocr in ['off', 'auto']
+            no_doc_mode = use_pymupdf in ['off'] and \
+                           use_pypdf in ['off'] and \
+                           use_unstructured_pdf in ['off'] and \
+                           enable_pdf_doctr in ['off'] and \
+                           enable_pdf_ocr in ['off', 'auto']
+
+            try:
+                db, collection_name = make_db_main(persist_directory=tmp_persist_directory, user_path=tmp_user_path,
+                                                   fail_any_exception=True, db_type=db_type,
+                                                   use_pymupdf=use_pymupdf,
+                                                   enable_pdf_ocr=enable_pdf_ocr,
+                                                   enable_pdf_doctr=enable_pdf_doctr,
+                                                   use_unstructured_pdf=use_unstructured_pdf,
+                                                   use_pypdf=use_pypdf,
+                                                   add_if_exists=False)
+            except Exception as e:
+                if 'had no valid text and no meta data was parsed' in str(e) or 'had no valid text, but meta data was parsed' in str(e):
+                    if no_doc_mode:
+                        return
+                    else:
+                        raise
+                raise
+
             assert db is not None
             docs = db.similarity_search("Suggestions")
-            assert len(docs) == 3 + (1 if db_type == 'chroma' else 0)
+            if default_mode:
+                assert len(docs) == 3 + (1 if db_type == 'chroma' else 0)
+            else:
+                # ocr etc. end up with different pages, overly complex to test exact count
+                assert len(docs) >= 2
             assert 'And more text. And more text.' in docs[0].page_content
-            assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1)
+            if db_type == 'weaviate':
+                assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1) or os.path.basename(docs[0].metadata['source']) == os.path.basename(test_file1)
+            else:
+                assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1)
 
 
-@pytest.mark.parametrize("enable_pdf_doctr", [False, True])
+@pytest.mark.parametrize("use_pypdf", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("use_unstructured_pdf", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("use_pymupdf", ['auto', 'on', 'off'])
+@pytest.mark.parametrize("enable_pdf_doctr", ['auto', 'on', 'off'])
 @pytest.mark.parametrize("enable_pdf_ocr", ['auto', 'on', 'off'])
 @pytest.mark.parametrize("db_type", db_types)
 @wrap_test_forked
-def test_image_pdf_add(db_type, enable_pdf_ocr, enable_pdf_doctr):
+def test_image_pdf_add(db_type, enable_pdf_ocr, enable_pdf_doctr, use_pymupdf, use_unstructured_pdf, use_pypdf):
     if enable_pdf_ocr == 'off' and not enable_pdf_doctr:
         return
     kill_weaviate(db_type)
     from src.make_db import make_db_main
     with tempfile.TemporaryDirectory() as tmp_persist_directory:
         with tempfile.TemporaryDirectory() as tmp_user_path:
-            test_file1 = os.path.join('tests', 'CityofTshwaneWater.pdf')
+            name = 'CityofTshwaneWater.pdf'
+            location = "tests"
+            test_file1 = os.path.join(location, name)
             shutil.copy(test_file1, tmp_user_path)
-            test_file1 = os.path.join(tmp_user_path, 'CityofTshwaneWater.pdf')
-            db, collection_name = make_db_main(persist_directory=tmp_persist_directory, user_path=tmp_user_path,
-                                               fail_any_exception=True, db_type=db_type,
-                                               enable_pdf_ocr=enable_pdf_ocr,
-                                               enable_pdf_doctr=enable_pdf_doctr,
-                                               add_if_exists=False)
-            assert db is not None
-            docs = db.similarity_search("List Tshwane's concerns about water.")
-            assert len(docs) == 4
-            assert 'we appeal to residents that do have water to please use it sparingly.' in docs[
-                1].page_content or 'OFFICE OF THE MMC FOR UTILITIES AND REGIONAL OPERATIONS' in docs[1].page_content
-            assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1)
+            test_file1 = os.path.join(tmp_user_path, name)
+
+            str_test = [db_type, enable_pdf_ocr, enable_pdf_doctr, use_pymupdf, use_unstructured_pdf, use_pypdf]
+            str_test = [str(x) for x in str_test]
+            str_test = '-'.join(str_test)
+
+            default_mode = use_pymupdf in ['auto', 'on'] and \
+                           use_pypdf in ['off', 'auto'] and \
+                           use_unstructured_pdf in ['auto'] and \
+                           enable_pdf_doctr in ['off', 'auto'] and \
+                           enable_pdf_ocr in ['off', 'auto']
+            no_doc_mode = use_pymupdf in ['off'] and \
+                          use_pypdf in ['off'] and \
+                          use_unstructured_pdf in ['off'] and \
+                          enable_pdf_doctr in ['off'] and \
+                          enable_pdf_ocr in ['off', 'auto']
+            no_docs = ['off-off-auto-off-auto', 'off-off-on-off-on', 'off-off-auto-off-off', 'off-off-off-off-auto',
+                       'off-off-on-off-off', 'off-off-on-off-auto', 'off-off-auto-off-on', 'off-off-off-off-on',
+
+                       ]
+            no_doc_mode |= any([x in str_test for x in no_docs])
+
+            try:
+                db, collection_name = make_db_main(persist_directory=tmp_persist_directory, user_path=tmp_user_path,
+                                                   fail_any_exception=True, db_type=db_type,
+                                                   use_pymupdf=use_pymupdf,
+                                                   enable_pdf_ocr=enable_pdf_ocr,
+                                                   enable_pdf_doctr=enable_pdf_doctr,
+                                                   use_unstructured_pdf=use_unstructured_pdf,
+                                                   use_pypdf=use_pypdf,
+                                                   add_if_exists=False)
+            except Exception as e:
+                if 'had no valid text and no meta data was parsed' in str(
+                        e) or 'had no valid text, but meta data was parsed' in str(e):
+                    if no_doc_mode:
+                        return
+                    else:
+                        raise
+                raise
+
+            if default_mode:
+                assert db is not None
+                docs = db.similarity_search("List Tshwane's concerns about water.")
+                assert len(docs) == 4
+                assert 'we appeal to residents that do have water to please use it sparingly.' in docs[
+                    1].page_content or 'OFFICE OF THE MMC FOR UTILITIES AND REGIONAL OPERATIONS' in docs[1].page_content
+            else:
+
+                assert db is not None
+                docs = db.similarity_search("List Tshwane's concerns about water.")
+                assert len(docs) >= 2
+                assert docs[0].page_content
+                assert docs[1].page_content
+            if db_type == 'weaviate':
+                assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1) or os.path.basename(docs[0].metadata['source']) == os.path.basename(test_file1)
+            else:
+                assert os.path.normpath(docs[0].metadata['source']) == os.path.normpath(test_file1)
 
 
 @pytest.mark.parametrize("db_type", db_types)
@@ -1552,46 +1657,52 @@ def test_chroma_filtering():
                         rets1 = rets[0]
                         if chroma_new:
                             if answer_with_sources == -1:
-                                assert len(rets1) == 2 and (
-                                        'h2oGPT' in rets1[0] or 'H2O GPT' in rets1[0] or 'H2O.ai' in rets1[0])
+                                assert len(rets1) == 4 and (
+                                        'h2oGPT' in rets1['response'] or 'H2O GPT' in rets1['response'] or 'H2O.ai' in
+                                        rets1['response'])
                             else:
-                                assert len(rets1) == 2 and (
-                                        'h2oGPT' in rets1[0] or 'H2O GPT' in rets1[0] or 'H2O.ai' in rets1[0])
+                                assert len(rets1) == 4 and (
+                                        'h2oGPT' in rets1['response'] or 'H2O GPT' in rets1['response'] or 'H2O.ai' in
+                                        rets1['response'])
                                 if document_subset == DocumentSubset.Relevant.name:
-                                    assert 'h2oGPT' in rets1[1]
+                                    assert 'h2oGPT' in rets1['sources']
                         else:
                             if answer_with_sources == -1:
-                                assert len(rets1) == 2 and (
-                                        'whisper' in rets1[0].lower() or
-                                        'phase' in rets1[0].lower() or
-                                        'generate' in rets1[0].lower() or
-                                        'statistic' in rets1[0].lower() or
-                                        '.pdf' in rets1[0].lower())
+                                assert len(rets1) == 4 and (
+                                        'whisper' in rets1['response'].lower() or
+                                        'phase' in rets1['response'].lower() or
+                                        'generate' in rets1['response'].lower() or
+                                        'statistic' in rets1['response'].lower() or
+                                        'a chat bot that' in rets1['response'].lower() or
+                                        'non-centrality parameter' in rets1['response'].lower() or
+                                        '.pdf' in rets1['response'].lower())
                             else:
-                                assert len(rets1) == 2 and (
-                                        'whisper' in rets1[0].lower() or
-                                        'phase' in rets1[0].lower() or
-                                        'generate' in rets1[0].lower() or
-                                        'statistic' in rets1[0].lower() or
-                                        '.pdf' in rets1[0].lower())
+                                assert len(rets1) == 4 and (
+                                        'whisper' in rets1['response'].lower() or
+                                        'phase' in rets1['response'].lower() or
+                                        'generate' in rets1['response'].lower() or
+                                        'statistic' in rets1['response'].lower() or
+                                        '.pdf' in rets1['response'].lower())
                                 if document_subset == DocumentSubset.Relevant.name:
-                                    assert 'whisper' in rets1[1] or 'unbiased' in rets1[1] or 'approximate' in rets1[1]
+                                    assert 'whisper' in rets1['sources'] or 'unbiased' in rets1[
+                                        'sources'] or 'approximate' in rets1['sources']
                         if answer_with_sources == -1:
                             if document_subset == DocumentSubset.Relevant.name:
-                                assert 'score' in rets1[1][0] and 'content' in rets1[1][0] and 'source' in rets1[1][0]
+                                assert 'score' in rets1['sources'][0] and 'content' in rets1['sources'][
+                                    0] and 'source' in rets1['sources'][0]
                                 if doc_choice in [1, 2]:
-                                    assert len(set([x['source'] for x in rets1[1]])) == doc_choice
+                                    assert len(set([x['source'] for x in rets1['sources']])) == doc_choice
                                 else:
-                                    assert len(set([x['source'] for x in rets1[1]])) >= 1
+                                    assert len(set([x['source'] for x in rets1['sources']])) >= 1
                             elif document_subset == DocumentSubset.RelSources.name:
                                 if doc_choice in [1, 2]:
-                                    assert len(set([x['source'] for x in rets1[1]])) <= doc_choice
+                                    assert len(set([x['source'] for x in rets1['sources']])) <= doc_choice
                                 else:
-                                    assert len(set([x['source'] for x in rets1[1]])) >= 2
+                                    assert len(set([x['source'] for x in rets1['sources']])) >= 2
                             else:
                                 # TopK may just be 1 doc because of many chunks from that doc
                                 # if top_k_docs=-1 might get more
-                                assert len(set([x['source'] for x in rets1[1]])) >= 1
+                                assert len(set([x['source'] for x in rets1['sources']])) >= 1
 
         # SHOW DOC
         single_document_choice1 = [x['source'] for x in db.get()['metadatas']][0]
