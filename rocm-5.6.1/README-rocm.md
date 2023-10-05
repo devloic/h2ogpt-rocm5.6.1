@@ -44,3 +44,11 @@ docker exec -it -e HSA_OVERRIDE_GFX_VERSION=10.3.0 h2ogpt-rocm5.6.1 python gener
 user: ai
 password: ai
 webui : http://0.0.0.0:7860
+
+
+specific rocm python packages:
+
+https://github.com/arlo-phoenix/bitsandbytes-rocm-5.6
+https://github.com/jllllll/exllama
+https://github.com/devloic/AutoGPTQ
+https://github.com/jllllll/llama-cpp-python-cuBLAS-wheels/releases/tag/rocm
