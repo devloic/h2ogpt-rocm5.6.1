@@ -29,6 +29,6 @@ FROM rocm/dev-ubuntu-22.04:5.6.1-complete
   && git clone https://github.com/arlo-phoenix/bitsandbytes-rocm-5.6 && cd bitsandbytes-rocm-5.6  && git checkout e38b9e91b718e8b84f4678c423f72dd4decce4e5 \
   && ROCM_HOME="/opt/rocm"  make hip ROCM_TARGET=gfx1030 && pip install . && cd .. \
   && pip install -r requirements.txt  --no-deps \
-  && git clone https://github.com/h2oai/h2ogpt && cd h2ogpt && git checkout 9d76056ae7fe73cb9be839d8e541c97f4d60ea34 \
+  && git clone https://github.com/h2oai/h2ogpt && cd h2ogpt && git checkout cdfe9316ba9f8f7676050d0cb90d9a0238da4c85 \
   && pip cache purge
   WORKDIR /home/ai/h2ogpt
