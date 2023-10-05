@@ -14,22 +14,33 @@ A. Image build instructions:
         2. Run h2ogpt
 
             a. The Dockerfile was designed for a AMD GPUs that use the gfx1030 architecture
-        or with a GPU  compatible with gfx1030 (like my 6600 XT , gfx1032). 
+        or with a GPU  compatible with gfx1030 (like my 6600 XT/gfx1032 setting HSA_OVERRIDE_GFX_VERSION=10.3.0). 
         For those GPUs you may just attach to the running container and run h2ogpt with:
-        docker exec -it h2ogpt-rocm5.6.1 python generate.py
+        docker exec -it h2ogpt-rocm5.6.1 python generate.py 
+        or
+        docker exec -it -e HSA_OVERRIDE_GFX_VERSION=10.3.0 h2ogpt-rocm5.6.1  python generate.py  (with a gfx1032 GPU) 
 
         otherwise
 
-            b. For other GPUs you need to recompile/install bitsandbytes-rocm-5.6 before launching h2ogpt
+            b. (Not tested) For other GPUs you need to recompile/install bitsandbytes-rocm-5.6 before launching h2ogpt
         Attach to the container with:
         docker exec -it h2ogpt-rocm5.6.1 bash
         Compile and install bitsandbytes for your GPU with:
-        ROCM_TARGET=gfx1100 ./install_bitsandbytes.sh (change ROCM_TARGET according to your amd GPU architecture )
+        cd /home/ai && ROCM_TARGET=gfx1100 ./install_bitsandbytes.sh (change ROCM_TARGET according to your amd GPU architecture )
         Run h2ogpt with:
-        python generate.py
+        cd /home/ai/h2ogpt && python generate.py
 
 OR
 
 B. Run the image provided on Docker hub with:
 
 docker-compose up -d
+docker exec -it h2ogpt-rocm5.6.1 python generate.py 
+or
+docker exec -it -e HSA_OVERRIDE_GFX_VERSION=10.3.0 h2ogpt-rocm5.6.1 python generate.py  (with a gfx1032 GPU) 
+
+
+
+user: ai
+password: ai
+webui : http://0.0.0.0:7860
