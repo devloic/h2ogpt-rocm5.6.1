@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  h2ogpt_rocm561:
+    image: h2ogpt-rocm5.6.1:latest
+    container_name: h2ogpt-rocm5.6.1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./huggingface_cache:/home/ai/.cache/huggingface:rw
+    command: bash
+    ports:
+     - 7860:7860
+    devices:
+      - "/dev/kfd"
+      - "/dev/dri"
+    stdin_open: true
+    tty: true
