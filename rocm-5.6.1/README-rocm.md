@@ -6,8 +6,8 @@ To run h2ogpt on docker you can
 A. Image build instructions:
 
         1. Build and run docker container with rocm 5.6.1 support with:
-        docker-compose -f ./docker-compose-build.yml up -d
-        (You may change the path "./huggingface_cache"  in docker-compose-build.yml so you can 
+        chmod +x ./run_docker-compose-build.sh
+        ./run_docker-compose-build.sh        (You may change the path "./huggingface_cache"  in docker-compose-build.yml so you can 
         reuse your host huggingface cache and models. Huggingface cache is usually located under
         ~/.cache/huggingface)
 
@@ -34,7 +34,8 @@ OR
 
 B. Run the image provided on Docker hub with:
 
-docker-compose up -d  
+chmod +x ./run_docker-compose.sh
+./run_docker-compose.sh
 
 
 docker exec -it h2ogpt-rocm5.6.1 python generate.py 
