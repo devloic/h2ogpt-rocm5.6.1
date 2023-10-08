@@ -49,6 +49,11 @@ docker exec -it -e HSA_OVERRIDE_GFX_VERSION=10.3.0 h2ogpt-rocm5.6.1 python gener
         ~/.cache/huggingface)
 
 
+prerequisites on the host:
+sudo apt install amdgpu-dkms
+sudo apt install rocm-hip-libraries
+sudo reboot
+
 On my host, access to the GPU is authorized to users that belong to the "render" group (GID 110 but
 it can vary). For the "ai" user in the container to have access to the GPU you need this user to belong to the "110" group
 too. It is not enough to have the "ai" user belong to "render" because "render" could have a different GID inside
