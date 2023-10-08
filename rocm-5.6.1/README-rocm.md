@@ -50,7 +50,7 @@ docker exec -it -e HSA_OVERRIDE_GFX_VERSION=10.3.0 h2ogpt-rocm5.6.1 python gener
 
 
 On my host, access to the GPU is authorized to users that belong to the "render" group (GID 110 but
-it can vary). For the user in the container "ai" to have access to the GPU you need this user to belong to the "110" group
+it can vary). For the "ai" user in the container to have access to the GPU you need this user to belong to the "110" group
 too. It is not enough to have the "ai" user belong to "render" because "render" could have a different GID inside
 the container and on the host.
 
