@@ -49,6 +49,19 @@ docker exec -it -e HSA_OVERRIDE_GFX_VERSION=10.3.0 h2ogpt-rocm5.6.1 python gener
         ~/.cache/huggingface)
 
 
+On my host, access to the GPU is authorized to users that belong to the "render" group (GID 110 but
+it can vary). For the user in the container "ai" to have access to the GPU you need this user to belong to the "110" group
+too. It is not enough to have the "ai" user belong to "render" because "render" could have a different GID inside
+the container and on the host.
+
+Tutorials usually add the user to the "video" group instead of "render" but that didn't work for me though it might be useful on other linux versions.
+
+In order to check if you have access to the GPU run:
+python -c "import torch; print(torch.cuda.is_available())"
+
+If it returns "TRUE" than you are good to go.
+
+
 user: ai
 
 password: ai
