@@ -6,6 +6,8 @@ services:
     volumes:
       - ./huggingface_cache:/home/ai/.cache/huggingface:rw
     command: bash
+    group_add:
+      - $RENDER_ID
     ports:
      - 7860:7860
     devices:
@@ -13,3 +15,5 @@ services:
       - "/dev/dri"
     stdin_open: true
     tty: true
+    security_opt:
+      - seccomp:unconfined
